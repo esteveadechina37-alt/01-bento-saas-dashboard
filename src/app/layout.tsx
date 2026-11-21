@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/hooks/useTheme";
 import "./globals.css";
@@ -19,10 +18,10 @@ const themeScript = `try{var t=localStorage.getItem("bento-dashboard-theme");doc
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
-        <Script id="theme-preference" strategy="beforeInteractive">
-          {themeScript}
-        </Script>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
