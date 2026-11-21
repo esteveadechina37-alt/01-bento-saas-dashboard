@@ -3,16 +3,17 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowUpRight } from "lucide-react";
 import { revenueByPeriod } from "@/lib/mock-data";
 import type { RevenuePeriod } from "@/types";
 import { BentoCard } from "@/components/ui/BentoCard";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 const periods: RevenuePeriod[] = ["7j", "30j", "90j"];
 
 export function RevenueChart() {
   const [period, setPeriod] = useState<RevenuePeriod>("30j");
   const chartData = revenueByPeriod[period];
+  const latestRevenue = chartData[chartData.length - 1].value;
 
   return (
     <BentoCard id="analytics" className="chart-card revenue-card">
@@ -20,7 +21,10 @@ export function RevenueChart() {
         <div>
           <p className="card-kicker">PERFORMANCE</p>
           <h2>Revenus</h2>
-          <p className="chart-card__summary">$48,294 <span><ArrowUpRight size={14} aria-hidden="true" /> 12.8%</span></p>
+          <p className="chart-card__summary">
+            <AnimatedNumber value={latestRevenue} prefix="$" />
+            <span className="chart-card__summary-caption">Dernier relevé</span>
+          </p>
         </div>
         <div className="period-switch" role="group" aria-label="Période du graphique des revenus">
           {periods.map((option) => (
@@ -75,7 +79,32 @@ export function RevenueChart() {
                   labelStyle={{ color: "var(--muted)", marginBottom: 4 }}
                   formatter={(value) => [`$${Number(value).toLocaleString("fr-FR")}`, "Revenus"]}
                 />
-                <Area type="monotone" dataKey="value" stroke="#9b72f2" strokeWidth={2.5} fill="url(#revenueFill)" activeDot={{ r: 5, fill: "#c4b5fd", stroke: "#7c3aed", strokeWidth: 3 }} animationDuration={650} />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#9b72f2"
+                  strokeWidth={2.5}
+                  fill="url(#revenueFill)"
+                  activeDot={{ r: 5, fill: "#c4b5fd", stroke: "#7c3aed", strokeWidth: 3 }}
+                  dot={(dotProps) => {
+                    if (
+                      dotProps.index !== chartData.length - 1 ||
+                      typeof dotProps.cx !== "number" ||
+                      typeof dotProps.cy !== "number"
+                    ) {
+                      return null;
+                    }
+
+                    return (
+                      <g aria-hidden="true">
+                        <circle className="revenue-chart__pulse" cx={dotProps.cx} cy={dotProps.cy} r={8} />
+                        <circle className="revenue-chart__point" cx={dotProps.cx} cy={dotProps.cy} r={3.5} />
+                      </g>
+                    );
+                  }}
+                  style={{ filter: "drop-shadow(0 0 5px rgba(155, 114, 242, 0.55))" }}
+                  animationDuration={650}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </motion.div>

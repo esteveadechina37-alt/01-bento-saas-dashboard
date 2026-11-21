@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { animate, motion, useMotionValue, useTransform } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { animate, motion, useMotionValue } from "framer-motion";
 
 type AnimatedNumberProps = {
   value: number;
@@ -12,27 +12,23 @@ type AnimatedNumberProps = {
 
 export function AnimatedNumber({ value, prefix = "", suffix = "", decimals = 0 }: AnimatedNumberProps) {
   const count = useMotionValue(0);
-  const formattedCount = useTransform(count, (current) =>
-    new Intl.NumberFormat("fr-FR", {
+  const formatter = useMemo(
+    () => new Intl.NumberFormat("fr-FR", {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
-    }).format(current),
+    }),
+    [decimals],
   );
-  const [displayValue, setDisplayValue] = useState(
-    new Intl.NumberFormat("fr-FR", {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    }).format(0),
-  );
+  const [displayValue, setDisplayValue] = useState(formatter.format(0));
 
   useEffect(() => {
-    const unsubscribe = formattedCount.on("change", setDisplayValue);
+    const unsubscribe = count.on("change", (current) => setDisplayValue(formatter.format(current)));
     const controls = animate(count, value, { duration: 1.2, ease: "easeOut" });
     return () => {
       unsubscribe();
       controls.stop();
     };
-  }, [count, formattedCount, value]);
+  }, [count, formatter, value]);
 
   return (
     <motion.span aria-label={`${prefix}${value}${suffix}`}>
